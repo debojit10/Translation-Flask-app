@@ -69,8 +69,8 @@ def upload_file():
             return redirect(url_for('DownloadFile', name=filename))
     return '''
     <!doctype html>
-    <title>Upload Text File</title>
-    <h1>Upload new File</h1>
+    <title>Translate</title>
+    <h1>Upload Text File</h1>
     <form method=post enctype=multipart/form-data>
       <input type=file name=file>
       <input type=submit value=Upload>
