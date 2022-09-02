@@ -9,8 +9,8 @@ from nltk.tokenize import sent_tokenize
 nltk.download('punkt')
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
-tokenizer = T5Tokenizer.from_pretrained('t5-base', model_max_length=512)
-model = T5ForConditionalGeneration.from_pretrained('t5-base', return_dict=True)
+tokenizer = T5Tokenizer.from_pretrained('t5-small', model_max_length=512)
+model = T5ForConditionalGeneration.from_pretrained('t5-small', return_dict=True)
 model = model.to(device)
 
 UPLOAD_FOLDER = 'uploads'
@@ -28,14 +28,14 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def translate(filename):
+def translate(filename, language):
     with open(filename) as f:
         text = f.read()
     texts = sent_tokenize(text)
     decoded = ''
     # You can also use "translate English to French" and "translate English to Romanian"
     for text in texts:
-        inputs = tokenizer("translate English to German: "+text, return_tensors="pt").to(device)  # Batch size 1
+        inputs = tokenizer("translate English to "+language+": "+text, return_tensors="pt").to(device)  # Batch size 1
         outputs = model.generate(input_ids=inputs["input_ids"],
                                 max_length=512,
                                 num_beams=5, 
@@ -53,6 +53,7 @@ def translate(filename):
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
+        language = request.form['options']
         # check if the post request has the file part
         if 'file' not in request.files:
             flash('No file part')
@@ -66,20 +67,12 @@ def upload_file():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('DownloadFile', name=filename))
-    return '''
-    <!doctype html>
-    <title>Translate</title>
-    <h1>Upload Text File</h1>
-    <form method=post enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
-    </form>
-    '''
+            return redirect(url_for('DownloadFile', name=filename, language=language))
+    return render_template('submit.html')
 
-@app.route('/uploads/<name>')
-def DownloadFile(name):
-    path = translate(os.path.join(app.config['UPLOAD_FOLDER'], name))
+@app.route('/uploads/<name>/<language>')
+def DownloadFile(name, language):
+    path = translate(os.path.join(app.config['UPLOAD_FOLDER'], name), language)
     if not os.path.exists(path):
         return ("File {} not downloaded".format(path))
     try:
