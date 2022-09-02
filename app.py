@@ -45,7 +45,7 @@ def translate(filename, language):
         decoded += tokenizer.decode(outputs[0], skip_special_tokens=True)+'\n'
 
     output_path = os.path.join(app.config['DOWNLOAD_FOLDER'], 'output.txt')
-    with open(output_path, "w") as text_file:
+    with open(output_path, "w", encoding="utf-8") as text_file:
         text_file.write(decoded)
 
     return output_path

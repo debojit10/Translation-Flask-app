@@ -1,5 +1,6 @@
 venv/
-
+uploads/
+downloads/
 *.pyc
 __pycache__/
 
